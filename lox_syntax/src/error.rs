@@ -1,4 +1,5 @@
 use crate::token::Token;
+
 pub enum LoxResult{
     RunTimeError { token: Token, message: String},
     Error {line: usize, message: String},

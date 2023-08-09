@@ -18,7 +18,7 @@ pub enum TokenType {
     Eof
 }
 
-enum Object {
+pub enum Object {
     Num(f64),
     Str(String),
     Nil,

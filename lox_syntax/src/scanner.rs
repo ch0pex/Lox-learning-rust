@@ -2,7 +2,7 @@
 use std::f32::consts::E;
 
 use crate::error::LoxResult;
-use crate::token::{Token, TokenType};
+use crate::token::{Token, TokenType, Object};
 
 pub struct Scanner {
     source: String,
@@ -61,13 +61,18 @@ impl Scanner{
        Ok(())
     }
 
+
     fn add_token(&mut self, ttype: TokenType) {
-        
+        self.add_token_object(ttype, None );
+    }
+
+    fn add_token_object(&mut self, ttype: TokenType, obj: Option<Object>){ 
+        //let text = self.source.get(start..current)
     }
 
     fn advance(&mut self) -> char{ 
         self.current += 1; 
-        self.source.chars().nth(self.current).unwrap()
+        self.source.chars().nth(self.current - 1).unwrap()
     }
 
     fn at_end(&self) -> bool{
