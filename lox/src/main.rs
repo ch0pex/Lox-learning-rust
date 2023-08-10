@@ -1,5 +1,5 @@
 use std::env::args;
-use std::io::{self, Write};
+use std::io::{self, Write, BufRead};
 use lox_syntax::scanner::Scanner;
 use lox_syntax::token::Token;
 use lox_syntax::error::LoxResult;
@@ -15,7 +15,7 @@ fn main() {
     }
 }
 
-fn run_file(file_path: &String) -> io::Result<()>{
+fn run_file(file_path: &String) -> io::Result<()> {
     let buf = std::fs::read_to_string(file_path)?; 
     match run(buf.as_str()) { 
         Ok(_) => std::process::exit(0),
@@ -25,23 +25,24 @@ fn run_file(file_path: &String) -> io::Result<()>{
 }
 
 fn run_prompt() {
-    let mut line = String::new();
-    loop{ 
-        print!("> ");
-        let _ = io::stdout().flush();
-        if io::stdin().read_line(&mut line).expect("Error reading prompt") <= 2{
-            break;
+    let stdin = io::stdin();
+    print!("> ");
+    let _ = io::stdout().flush();
+    for line in stdin.lock().lines() {
+        match line{ 
+            Ok(promt) => {
+                let _ = run(&promt.as_str());
+                print!("> ");
+                let _ = io::stdout().flush();
+            }
+            Err(_) => std::process::exit(0)
         }
-        let _ = run(line.as_str());
     }
 }
 
 fn run(source: &str) -> Result<(), LoxResult> {
-    println!("{}", source.to_string());
-    let _ = io::stdout().flush();
     let mut scanner = Scanner::new(source);
     let tokens: &Vec<Token> = scanner.scan_tokens()?;
-
 
     for token in tokens{
         println!("{}", token);

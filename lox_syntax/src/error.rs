@@ -8,7 +8,7 @@ pub enum LoxResult{
 
 
 impl LoxResult{ 
-    pub fn error(line: usize, message: &String) -> LoxResult{ 
+    pub fn error(line: usize, message: &str) -> LoxResult{ 
         let err = LoxResult::Error { 
             line,
             message: message.to_string()
