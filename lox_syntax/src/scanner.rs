@@ -33,7 +33,7 @@ impl Scanner{
         };
 
         self.tokens.push(Token::eof(self.line));
-        
+
         match had_error {
             Some(e) => Err(e),
             None => Ok(&self.tokens)
@@ -58,6 +58,9 @@ impl Scanner{
             '<' => {if self.expect('='){self.add_token(TokenType::LessEqual)} else {self.add_token(TokenType::Less)}},
             '>' => {if self.expect('='){self.add_token(TokenType::GreaterEqual)} else {self.add_token(TokenType::Greater)}}
             '"' => {self.string()?}
+            '0'..='9' => {self.number()?}
+            'a'..='z' | 'A'..='Z' | '_' => {self.identifier()?}
+            
             '\n' => {self.line += 1}
             '\r' => {},
             '\t' => {},
@@ -65,7 +68,7 @@ impl Scanner{
             '/' => {
                 match self.expect('/'){ 
                     true => {
-                        while self.peek() != '\n' && !self.at_end() { self.advance(); }
+                        while self.peek().unwrap() != '\n' && !self.at_end() {self.advance();}
                     }
                     false => self.add_token(TokenType::Slash)
 
@@ -86,7 +89,7 @@ impl Scanner{
         self.tokens.push(Token::new(ttype, text, obj, self.line));
     }
 
-    pub fn advance(&mut self) -> &char{ 
+    pub fn advance(&mut self) -> &char { 
         self.current += 1;
         self.source.get(self.current - 1).unwrap()
     }
@@ -95,12 +98,27 @@ impl Scanner{
         self.current >= self.source.len()
     }
 
-    fn peek(&self ) -> char {
-        if self.at_end() {
-            '\0'
+    fn peek(&self) -> Option<char> {
+        self.source.get(self.current).copied()
+    }
+
+    fn peek_next(&self) -> Option<char> { 
+        self.source.get(self.current + 1).copied()
+    }
+
+    fn is_digit(ch: Option<char>) -> bool { 
+        if let Some(ch) = ch { 
+            ch.is_ascii_digit()
+        } else {
+            false
         }
-        else{
-            *self.source.get(self.current).unwrap()
+    }
+
+    fn is_alphanumeric(ch: Option<char>) -> bool { 
+        if let Some(ch) = ch {
+            ch.is_alphanumeric()
+        } else {
+            false
         }
     }
 
@@ -119,16 +137,73 @@ impl Scanner{
     }
 
     fn string(&mut self) -> Result<(), LoxResult>{ 
-        while self.peek() != '"' && !self.at_end() { 
-            if self.peek() == '\n'{ 
-                self.line += 1;
-            }
-            
-            if self.at_end(){
-                Err(LoxResult::error(self.line, "String not ended"))
+        while let Some(ch) = self.peek(){ 
+            match ch {
+                '\n' => {self.line += 1},
+                '"' => break,
+                 _ => {self.advance();}
             }
         }
+        if self.at_end(){
+            return Err(LoxResult::error(self.line, "String not ended"));
+        }
+        self.advance();   
+        let value = self.source[self.start + 1..self.current - 1].iter().collect();
+        self.add_token_object(TokenType::String, Some(Object::Str(value)));
         Ok(())
     }
+
+
+    fn number(&mut self) -> Result<(), LoxResult>{ 
+        while Scanner::is_digit(self.peek()){ 
+            self.advance();
+        } 
+        if self.peek() == Some('.') && Scanner::is_digit(self.peek_next()) {
+            self.advance();
+            while Scanner::is_digit(self.peek()){
+                self.advance();
+                if self.peek() == Some('.') {  
+                    return Err(LoxResult::error(self.line, "Number with multiple dots"));
+                }
+            }
+        }
+        let value: String = self.source[self.start..self.current].iter().collect();
+        let number: f64 = value.parse().unwrap();
+        self.add_token_object(TokenType::Number, Some(Object::Num(number)));
+        Ok(())
+    }
+
+    fn identifier(&mut self) -> Result<(), LoxResult>{ 
+        while Scanner::is_alphanumeric(self.peek()) {
+            self.advance();
+        }
+        let word: String = self.source[self.start..self.current].iter().collect();
+        let token_type = Scanner::check_keyword(word.as_str());
+        self.add_token(token_type);
+        Ok(())
+    }
+
+    fn check_keyword(word: &str) -> TokenType {
+        match word {
+            "and" => TokenType::And,
+            "class" => TokenType::Class,
+            "else" => TokenType::Else,
+            "false" => TokenType::False,
+            "for" => TokenType::For,
+            "fun" => TokenType::Fun,
+            "if" => TokenType::If,
+            "nil" => TokenType::Nil,
+            "or" => TokenType::Or,
+            "print" => TokenType::Print,
+            "return" => TokenType::Return,
+            "super" => TokenType::Super,
+            "this" => TokenType::This,
+            "true" => TokenType::True,
+            "var" => TokenType::Var,
+            "while" => TokenType::While,
+            _ => TokenType::Identifier 
+        }
+    }
+
 
 }
