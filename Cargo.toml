@@ -2,5 +2,7 @@
 
 members = [
     "lox",
-    "lox_syntax"
+    "lox_syntax",
+    "ast"
 ]
+

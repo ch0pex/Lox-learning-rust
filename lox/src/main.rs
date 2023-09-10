@@ -43,7 +43,6 @@ fn run_prompt() {
 fn run(source: &str) -> Result<(), LoxResult> {
     let mut scanner = Scanner::new(source);
     let tokens: &Vec<Token> = scanner.scan_tokens()?;
-
     for token in tokens{
         println!("{}", token);
     }

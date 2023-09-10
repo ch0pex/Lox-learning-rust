@@ -39,9 +39,9 @@ impl fmt::Display for Object {
 }
 
 pub struct Token { 
-    ttype: TokenType,
-    lexeme: String,
-    literal: Option<Object>,
+    pub ttype: TokenType,
+    pub lexeme: String,
+    pub literal: Option<Object>,
     line: usize
 }
 

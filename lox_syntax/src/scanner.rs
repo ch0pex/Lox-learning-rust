@@ -204,6 +204,4 @@ impl Scanner{
             _ => TokenType::Identifier 
         }
     }
-
-
 }
