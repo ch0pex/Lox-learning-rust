@@ -8,12 +8,17 @@ impl AstPrinter {
         AstPrinter{}    
     }
 
-    pub fn print(&self, expr: Expr) -> String {
+    pub fn print(&mut self, expr: Expr) -> String {
         expr.accept(self)
     }
 
     pub fn parenthesize(&mut self, name: &str, exprs: &[&Expr]) -> String {
-        format!("({name}")     
+        let mut s = format!("({name}");
+        for expr in exprs { 
+            s = format!("{s} {}",expr.accept(self));
+        }
+        s.push_str(")");
+        s
     }
 }
 
@@ -27,9 +32,10 @@ impl Visitor<String> for AstPrinter {
     }
 
     fn visit_literal_expr(&mut self, value: &Token) -> String {
-        match value.literal {
-            Some(literal) => literal.to_string(),
-            None => "nil".to_string()
+        if let Some(value) = &value.literal {
+            value.to_string()
+        } else {
+            "nil".to_string()
         }
     }
     
