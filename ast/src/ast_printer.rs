@@ -1,5 +1,5 @@
 use crate::ast::*;
-use lox_syntax::token::Token;
+use lox_syntax::token::{Object,Token};
 
 pub struct AstPrinter;
 
@@ -31,11 +31,10 @@ impl Visitor<String> for AstPrinter {
         self.parenthesize("group", &[expression])
     }
 
-    fn visit_literal_expr(&mut self, value: &Token) -> String {
-        if let Some(value) = &value.literal {
-            value.to_string()
-        } else {
-            "nil".to_string()
+    fn visit_literal_expr(&mut self, value: &Object) -> String {
+        match value { 
+            Object::Nil => "nil".to_string(),
+            _ => value.to_string()
         }
     }
 

@@ -20,7 +20,6 @@ fn run_file(file_path: &String) -> io::Result<()> {
     match run(buf.as_str()) { 
         Ok(_) => std::process::exit(0),
         Err(_) => std::process::exit(65),
-        //_ => std::process::exit(65)
     }
 }
 
@@ -46,5 +45,6 @@ fn run(source: &str) -> Result<(), LoxResult> {
     for token in tokens{
         println!("{}", token);
     }
+    println!();
     Ok(())
 }
