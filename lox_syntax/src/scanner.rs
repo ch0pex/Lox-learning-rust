@@ -10,13 +10,13 @@ pub struct Scanner {
 }
 
 impl Scanner{
-    pub fn new(source: &str) -> Scanner{ 
+    pub fn new(source: &str) -> Scanner{
         Scanner {
             source: source.chars().collect(),
-            tokens: Vec::new(),   
+            tokens: Vec::new(),
             start: 0,
             current: 0,
-            line: 1 
+            line: 1
         }
     }
 
@@ -40,8 +40,8 @@ impl Scanner{
         }
     }
 
-    fn scan_token(&mut self) -> Result<(),LoxResult>{ 
-        let character = self.advance(); 
+    fn scan_token(&mut self) -> Result<(),LoxResult>{
+        let character = self.advance();
         match character {
             '(' => {self.add_token(TokenType::LeftParen)},
             ')' => {self.add_token(TokenType::RightParen)},
@@ -60,13 +60,13 @@ impl Scanner{
             '"' => {self.string()?}
             '0'..='9' => {self.number()?}
             'a'..='z' | 'A'..='Z' | '_' => {self.identifier()?}
-            
+
             '\n' => {self.line += 1}
             '\r' => {},
             '\t' => {},
             ' ' => {},
             '/' => {
-                match self.expect('/'){ 
+                match self.expect('/'){
                     true => {
                         while self.peek().unwrap() != '\n' && !self.at_end() {self.advance();}
                     }
@@ -84,12 +84,12 @@ impl Scanner{
         self.add_token_object(ttype, None );
     }
 
-    fn add_token_object(&mut self, ttype: TokenType, obj: Option<Object>){ 
+    fn add_token_object(&mut self, ttype: TokenType, obj: Option<Object>){
         let text = self.source[self.start..self.current].iter().collect();
         self.tokens.push(Token::new(ttype, text, obj, self.line));
     }
 
-    pub fn advance(&mut self) -> &char { 
+    pub fn advance(&mut self) -> &char {
         self.current += 1;
         self.source.get(self.current - 1).unwrap()
     }
@@ -102,19 +102,19 @@ impl Scanner{
         self.source.get(self.current).copied()
     }
 
-    fn peek_next(&self) -> Option<char> { 
+    fn peek_next(&self) -> Option<char> {
         self.source.get(self.current + 1).copied()
     }
 
-    fn is_digit(ch: Option<char>) -> bool { 
-        if let Some(ch) = ch { 
+    fn is_digit(ch: Option<char>) -> bool {
+        if let Some(ch) = ch {
             ch.is_ascii_digit()
         } else {
             false
         }
     }
 
-    fn is_alphanumeric(ch: Option<char>) -> bool { 
+    fn is_alphanumeric(ch: Option<char>) -> bool {
         if let Some(ch) = ch {
             ch.is_alphanumeric()
         } else {
@@ -125,7 +125,7 @@ impl Scanner{
     fn expect(&mut self, expected: char) -> bool{
         match self.source.get(self.current){
             Some(ch) => {
-                if expected == *ch { 
+                if expected == *ch {
                     self.current += 1;
                     true
                 } else {
@@ -136,8 +136,8 @@ impl Scanner{
         }
     }
 
-    fn string(&mut self) -> Result<(), LoxResult>{ 
-        while let Some(ch) = self.peek(){ 
+    fn string(&mut self) -> Result<(), LoxResult>{
+        while let Some(ch) = self.peek(){
             match ch {
                 '\n' => {self.line += 1},
                 '"' => break,
@@ -147,22 +147,22 @@ impl Scanner{
         if self.at_end(){
             return Err(LoxResult::error(self.line, "String not ended"));
         }
-        self.advance();   
+        self.advance();
         let value = self.source[self.start + 1..self.current - 1].iter().collect();
         self.add_token_object(TokenType::String, Some(Object::Str(value)));
         Ok(())
     }
 
 
-    fn number(&mut self) -> Result<(), LoxResult>{ 
-        while Scanner::is_digit(self.peek()){ 
+    fn number(&mut self) -> Result<(), LoxResult>{
+        while Scanner::is_digit(self.peek()){
             self.advance();
-        } 
+        }
         if self.peek() == Some('.') && Scanner::is_digit(self.peek_next()) {
             self.advance();
             while Scanner::is_digit(self.peek()){
                 self.advance();
-                if self.peek() == Some('.') {  
+                if self.peek() == Some('.') {
                     return Err(LoxResult::error(self.line, "Number with multiple dots"));
                 }
             }
@@ -173,7 +173,7 @@ impl Scanner{
         Ok(())
     }
 
-    fn identifier(&mut self) -> Result<(), LoxResult>{ 
+    fn identifier(&mut self) -> Result<(), LoxResult>{
         while Scanner::is_alphanumeric(self.peek()) {
             self.advance();
         }
@@ -201,7 +201,7 @@ impl Scanner{
             "true" => TokenType::True,
             "var" => TokenType::Var,
             "while" => TokenType::While,
-            _ => TokenType::Identifier 
+            _ => TokenType::Identifier
         }
     }
 }

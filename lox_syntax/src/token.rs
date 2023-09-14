@@ -18,6 +18,7 @@ pub enum TokenType {
     Eof
 }
 
+#[derive(Debug)]
 pub enum Object {
     Num(f64),
     Str(String),
@@ -37,16 +38,16 @@ impl fmt::Display for Object {
         }
     }
 }
-
-pub struct Token { 
+#[derive(Debug)]
+pub struct Token {
     pub ttype: TokenType,
     pub lexeme: String,
     pub literal: Option<Object>,
     line: usize
 }
 
-impl Token { 
-    pub fn new(ttype: TokenType, lexeme: String, literal: Option<Object>, line: usize) -> Token { 
+impl Token {
+    pub fn new(ttype: TokenType, lexeme: String, literal: Option<Object>, line: usize) -> Token {
         Token { ttype, lexeme, literal, line }
     }
 
@@ -64,7 +65,7 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let lit;
         match &self.literal {
-            Some(literal) => {lit = literal.to_string()} 
+            Some(literal) => {lit = literal.to_string()}
             None => { lit = "None".to_string()}
         }
         write!(f, "{:?} {} {}", self.ttype, self.lexeme, lit)
