@@ -41,4 +41,36 @@ impl Visitor<String> for AstPrinter {
     fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> String {
         self.parenthesize(operator.lexeme.as_str(), &[right])
     }
+   
+    fn visit_assing_expr(&mut self, name: &Token, value: &Expr) -> String {
+        todo!()
+    }
+
+    fn visit_call_expr(&mut self, callee: &Box<Expr>, paren: &Token, arguments: &Vec<Box<Expr>>) -> String { 
+        todo!()
+    } 
+
+    fn visit_get_expr(&mut self, object: &Box<Expr>, name: &Token) -> String {
+        todo!()
+    }
+
+    fn visit_logical_expr(&mut self, left: &Box<Expr>, operator: &Token, right: &Box<Expr>) -> String {
+        todo!()
+    }
+
+    fn visit_set_expr(&mut self, object: &Box<Expr>, name: &Token, value: &Box<Expr>) -> String {
+        todo!()
+    }
+
+    fn visit_super_expr(&mut self, keyword: &Token, method: &Token) -> String { 
+        todo!()
+    }
+
+    fn visit_this_expr(&mut self, keyword: &Token) -> String {
+        todo!()
+    } 
+
+    fn visit_variable_expr(&mut self, keyword: &Token) -> String {
+        todo!()
+    } 
 }
