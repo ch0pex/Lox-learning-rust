@@ -1,4 +1,4 @@
-pub mod ast;
+pub mod expr;
 pub mod ast_printer;
 
 #[cfg(test)]
@@ -6,7 +6,7 @@ mod tests{
     use lox_syntax::token::{TokenType, Token, Object};
     use super::{
         ast_printer::AstPrinter,
-        ast::*,
+        expr::*,
     };
 
     #[test]

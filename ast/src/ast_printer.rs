@@ -1,4 +1,4 @@
-use crate::ast::*;
+use crate::expr::*;
 use lox_syntax::token::{Object,Token};
 
 pub struct AstPrinter;
@@ -42,7 +42,7 @@ impl Visitor<String> for AstPrinter {
         self.parenthesize(operator.lexeme.as_str(), &[right])
     }
    
-    fn visit_assing_expr(&mut self, name: &Token, value: &Expr) -> String {
+    fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> String {
         todo!()
     }
 
@@ -67,7 +67,7 @@ impl Visitor<String> for AstPrinter {
     }
 
     fn visit_this_expr(&mut self, keyword: &Token) -> String {
-        todo!()
+        todo!();
     } 
 
     fn visit_variable_expr(&mut self, keyword: &Token) -> String {

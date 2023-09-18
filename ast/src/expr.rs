@@ -1,6 +1,5 @@
 use lox_syntax::token::{Token, Object};
 
-
 pub enum Expr {
     Binary(Box<Expr>, Token, Box<Expr>),
     Grouping(Box<Expr>),
@@ -23,7 +22,7 @@ impl Expr {
             Expr::Grouping(expression) => visitor.visit_grouping_expr(expression),
             Expr::Literal(value) => visitor.visit_literal_expr(value),
             Expr::Unary(operator, right) => visitor.visit_unary_expr(operator, right),
-            Expr::Assign(name, value) => visitor.visit_assing_expr(name, value),
+            Expr::Assign(name, value) => visitor.visit_assign_expr(name, value),
             Expr::Call(callee, paren, arguments) => visitor.visit_call_expr(callee, paren, arguments),
             Expr::Get(object, name) => visitor.visit_get_expr(object,name),
             Expr::Logical(left, operator, right) => visitor.visit_logical_expr(left, operator, right),
@@ -40,7 +39,7 @@ pub trait Visitor<T> {
     fn visit_grouping_expr(&mut self, expression: &Expr) -> T;
     fn visit_literal_expr(&mut self, value: &Object) -> T;
     fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> T;
-    fn visit_assing_expr(&mut self, name: &Token, value: &Expr) -> T;
+    fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> T;
     fn visit_call_expr(&mut self, callee: &Box<Expr>, paren: &Token, arguments: &Vec<Box<Expr>>) -> T;
     fn visit_get_expr(&mut self, object: &Box<Expr>, name: &Token) -> T;
     fn visit_logical_expr(&mut self, left: &Box<Expr>, operator: &Token, right: &Box<Expr>) -> T;  
