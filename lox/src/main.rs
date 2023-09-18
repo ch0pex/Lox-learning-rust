@@ -2,7 +2,7 @@ use std::env::args;
 use std::io::{self, Write, BufRead};
 use lox_syntax::scanner::Scanner;
 use lox_syntax::token::Token;
-use lox_syntax::error::LoxResult;
+use result::result::LoxResult;
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -15,9 +15,9 @@ fn main() {
     }
 }
 
-fn run_file(file_path: &String) -> io::Result<()> {
+fn run_file(file_path: &str) -> io::Result<()> {
     let buf = std::fs::read_to_string(file_path)?; 
-    match run(buf.as_str()) { 
+    match run(&buf) {
         Ok(_) => std::process::exit(0),
         Err(_) => std::process::exit(65),
     }
@@ -29,8 +29,8 @@ fn run_prompt() {
     let _ = io::stdout().flush();
     for line in stdin.lock().lines() {
         match line{ 
-            Ok(promt) => {
-                let _ = run(&promt.as_str());
+            Ok(prompt) => {
+                let _ = run(&prompt);
                 print!("> ");
                 let _ = io::stdout().flush();
             }

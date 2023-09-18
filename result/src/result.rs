@@ -1,12 +1,10 @@
-use crate::token::Token;
+//use lox_syntax::token::Token;
 
 #[derive(Debug)]
 pub enum LoxResult{
-    RunTimeError {token: Token, message: String},
+    RunTimeError {line: usize, message: String},
     Error {line: usize, message: String},
 }
-
-
 
 impl LoxResult{
     pub fn error(line: usize, message: &str) -> LoxResult{
@@ -20,10 +18,8 @@ impl LoxResult{
 
     fn report(&self) {
         match self {
-            LoxResult::Error {line, message} => {
-                eprintln!("[line {}] Error: {}", line, message);
-            }
-            LoxResult::RunTimeError { token, message } => todo!(),
+            LoxResult::Error {line, message} => eprintln!("[line {}] Error: {}", line, message),
+            LoxResult::RunTimeError { line, message } => eprintln!("Runtime error [line {}]: {} ", line, message),
         }
     }
 }

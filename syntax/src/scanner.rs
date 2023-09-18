@@ -1,4 +1,4 @@
-use crate::error::LoxResult;
+use result::result::LoxResult;
 use crate::token::{Token, TokenType, Object};
 
 pub struct Scanner {
