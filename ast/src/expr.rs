@@ -1,19 +1,19 @@
-use std::rc::Rc;
+use std::rc::Box;
 use lox_syntax::token::{Token, Object};
 
-pub enum Expr {
-    Binary(Rc<Expr>, Token, Rc<Expr>),
-    Grouping(Rc<Expr>),
+pub enum Expr<'a> {
+    Binary(Box<Expr<'a>>, &'a Token, Box<Expr<'a>>),
+    Grouping(Box<Expr<'a>>),
     Literal(Object),
-    Unary(Token, Rc<Expr>),
-    Assign(Token, Rc<Expr>),
-    Call(Rc<Expr>, Token, Vec<Rc<Expr>>),
-    Get(Rc<Expr>, Token),
-    Logical(Rc<Expr>, Token, Rc<Expr>),
-    Set(Rc<Expr>, Token, Rc<Expr>),
-    Super(Token, Token),
-    This(Token),
-    Variable(Token),
+    Unary(&'a Token, Box<Expr<'a>>),
+    Assign(&'a Token, Box<Expr<'a>>),
+    Call(Box<Expr<'a>>, &'a Token, Vec<Box<Expr<'a>>>),
+    Get(Box<Expr<'a>>, &'a Token),
+    Logical(Box<Expr<'a>>, &'a Token, Box<Expr<'a>>),
+    Set(Box<Expr<'a>>, &'a Token, Box<Expr<'a>>),
+    Super(&'a Token, &'a Token),
+    This(&'a Token),
+    Variable(&'a Token),
 }
 
 impl Expr {
@@ -41,10 +41,10 @@ pub trait Visitor<T> {
     fn visit_literal_expr(&mut self, value: &Object) -> T;
     fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> T;
     fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> T;
-    fn visit_call_expr(&mut self, callee: &Rc<Expr>, paren: &Token, arguments: &Vec<Rc<Expr>>) -> T;
-    fn visit_get_expr(&mut self, object: &Rc<Expr>, name: &Token) -> T;
-    fn visit_logical_expr(&mut self, left: &Rc<Expr>, operator: &Token, right: &Rc<Expr>) -> T;
-    fn visit_set_expr(&mut self, object: &Rc<Expr>, name: &Token, value: &Rc<Expr>) -> T;
+    fn visit_call_expr(&mut self, callee: &Expr, paren: &Token, arguments: &Vec<Expr>) -> T;
+    fn visit_get_expr(&mut self, object: &Box<Expr>, name: &Token) -> T;
+    fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> T;
+    fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> T;
     fn visit_super_expr(&mut self, keyword: &Token, method: &Token) -> T;
     fn visit_this_expr(&mut self, keyword: &Token) -> T;
     fn visit_variable_expr(&mut self, name: &Token) -> T;

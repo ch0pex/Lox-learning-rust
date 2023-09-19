@@ -46,19 +46,19 @@ impl Visitor<String> for AstPrinter {
         todo!()
     }
 
-    fn visit_call_expr(&mut self, callee: &Box<Expr>, paren: &Token, arguments: &Vec<Box<Expr>>) -> String { 
+    fn visit_call_expr(&mut self, callee: &Expr, paren: &Token, arguments: &Vec<Box<Expr>>) -> String {
         todo!()
     } 
 
-    fn visit_get_expr(&mut self, object: &Box<Expr>, name: &Token) -> String {
+    fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> String {
         todo!()
     }
 
-    fn visit_logical_expr(&mut self, left: &Box<Expr>, operator: &Token, right: &Box<Expr>) -> String {
+    fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> String {
         todo!()
     }
 
-    fn visit_set_expr(&mut self, object: &Box<Expr>, name: &Token, value: &Box<Expr>) -> String {
+    fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> String {
         todo!()
     }
 
