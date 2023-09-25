@@ -20,7 +20,7 @@ impl Scanner{
         }
     }
 
-    pub fn scan_tokens(&mut self) -> Result<&Vec<Token>, LoxResult> {
+    pub fn scan_tokens(&mut self) -> Result<Vec<Token>, LoxResult> {
         let mut had_error: Option<LoxResult> = None;
         while self.at_end() == false{
             self.start = self.current;
@@ -36,7 +36,7 @@ impl Scanner{
 
         match had_error {
             Some(e) => Err(e),
-            None => Ok(&self.tokens)
+            None => Ok(std::mem::take(&mut self.tokens))
         }
     }
 

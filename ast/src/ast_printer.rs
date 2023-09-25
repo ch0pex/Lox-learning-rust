@@ -8,14 +8,14 @@ impl AstPrinter {
         AstPrinter{}
     }
 
-    pub fn print(&mut self, expr: Expr) -> String {
+    pub fn print(&mut self, expr: Box<Expr>) -> String {
         expr.accept(self)
     }
 
     pub fn parenthesize(&mut self, name: &str, exprs: &[&Expr]) -> String {
         let mut s = format!("({name}");
-        for expr in exprs {
-            s = format!("{s} {}",expr.accept(self));
+        for &expr in exprs {
+            s = format!("{s} {}", expr.accept(self));
         }
         s.push_str(")");
         s
@@ -23,11 +23,11 @@ impl AstPrinter {
 }
 
 impl Visitor<String> for AstPrinter {
-    fn visit_binary_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> String {
+    fn visit_binary_expr(&mut self, left: &Box<Expr>, operator: &Token, right: &Box<Expr>) -> String {
         self.parenthesize(operator.lexeme.as_str(), &[left, right])
     }
 
-    fn visit_grouping_expr(&mut self, expression: &Expr) -> String {
+    fn visit_grouping_expr(&mut self, expression: &Box<Expr>) -> String {
         self.parenthesize("group", &[expression])
     }
 
@@ -38,27 +38,27 @@ impl Visitor<String> for AstPrinter {
         }
     }
 
-    fn visit_unary_expr(&mut self, operator: &Token, right: &Expr) -> String {
+    fn visit_unary_expr(&mut self, operator: &Token, right: &Box<Expr>) -> String {
         self.parenthesize(operator.lexeme.as_str(), &[right])
     }
    
-    fn visit_assign_expr(&mut self, name: &Token, value: &Expr) -> String {
+    fn visit_assign_expr(&mut self, name: &Token, value: &Box<Expr>) -> String {
         todo!()
     }
 
-    fn visit_call_expr(&mut self, callee: &Expr, paren: &Token, arguments: &Vec<Box<Expr>>) -> String {
+    fn visit_call_expr(&mut self, callee: &Box<Expr>, paren: &Token, arguments: &Vec<Box<Expr>>) -> String {
         todo!()
     } 
 
-    fn visit_get_expr(&mut self, object: &Expr, name: &Token) -> String {
+    fn visit_get_expr(&mut self, object: &Box<Expr>, name: &Token) -> String {
         todo!()
     }
 
-    fn visit_logical_expr(&mut self, left: &Expr, operator: &Token, right: &Expr) -> String {
+    fn visit_logical_expr(&mut self, left: &Box<Expr>, operator: &Token, right: &Box<Expr>) -> String {
         todo!()
     }
 
-    fn visit_set_expr(&mut self, object: &Expr, name: &Token, value: &Expr) -> String {
+    fn visit_set_expr(&mut self, object: &Box<Expr>, name: &Token, value: &Box<Expr>) -> String {
         todo!()
     }
 

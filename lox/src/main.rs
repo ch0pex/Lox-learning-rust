@@ -3,6 +3,8 @@ use std::io::{self, Write, BufRead};
 use lox_syntax::scanner::Scanner;
 use lox_syntax::token::Token;
 use result::result::LoxResult;
+use parser::parser::Parser;
+use ast::ast_printer::AstPrinter;
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -41,10 +43,11 @@ fn run_prompt() {
 
 fn run(source: &str) -> Result<(), LoxResult> {
     let mut scanner = Scanner::new(source);
-    let tokens: &Vec<Token> = scanner.scan_tokens()?;
-    for token in tokens{
-        println!("{}", token);
-    }
-    println!();
+    let tokens: Vec<Token> = scanner.scan_tokens()?;
+    let mut parser = Parser::new(tokens);
+    let expression = parser.parse()?;
+
+    let mut pretty_printer = AstPrinter::new();
+    println!("{}", pretty_printer.print(expression));
     Ok(())
 }

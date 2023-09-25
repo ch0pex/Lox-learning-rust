@@ -1,12 +1,11 @@
-use std::arch::x86_64::__m128;
 use lox_syntax::token::{Object, Token, TokenType};
 use ast::expr::Expr;
-use lox_syntax::token::TokenType::{Bang, BangEqual, Equals, False, Greater, GreaterEqual, Less, LessEqual, Minus, Nil, Number, Plus, RightParen, String, True};
-use std::rc::Rc;
+use lox_syntax::token::TokenType::*;
+use result::result::LoxResult;
 
-struct Parser {
+pub struct Parser {
     tokens: Vec<Token>,
-    current: i32
+    current: usize
 }
 
 impl Parser {
@@ -17,77 +16,99 @@ impl Parser {
         }
     }
 
-    fn expression(&mut self) -> Expr{
+    pub fn parse(&mut self) -> Result<Box<Expr>, LoxResult>{
+        self.expression()
+    }
+
+    fn expression(&mut self) -> Result<Box<Expr>, LoxResult>{
         self.equality()
     }
 
-    fn equality(&mut self) -> Expr {
-        let mut expr = self.comparison();
+    fn equality(&mut self) -> Result<Box<Expr>, LoxResult> {
+        let mut expr = self.comparison()?;
         while self.matches(&[BangEqual, Equals]) {
-            let operator = self.previous();
-            let right = self.comparison();
-            expr = Expr::Binary(Rc::from(expr), operator, Rc::from(right));
+            let operator = self.previous().clone();
+            let right = self.comparison()?;
+            expr = Box::new(Expr::Binary(expr, operator, right));
         }
-        expr
+        Ok(expr)
     }
 
-    fn comparison(&mut self) -> Expr {
-        let mut expr = self.term();
+    fn comparison(&mut self) -> Result<Box<Expr>, LoxResult> {
+        let mut expr = self.term()?;
         while self.matches(&[Greater, GreaterEqual, Less, LessEqual]) {
-            let operator = self.previous();
-            let right = self.term();
-            expr = Expr::Binary(Rc::from(expr), operator, Rc::from(right));
+            let operator = self.previous().clone();
+            let right = self.term()?;
+            expr = Box::new(Expr::Binary(expr, operator, right));
         }
-        expr
+        Ok(expr)
     }
 
-    fn term(&mut self) -> Expr {
-        let mut expr = self.factor();
+    fn term(&mut self) -> Result<Box<Expr>, LoxResult> {
+        let mut expr = self.factor()?;
         while self.matches(&[Minus, Plus]) {
-            let operator = self.previous();
-            let right = self.factor();
-            expr = Expr::Binary(Rc::from(expr), operator, Rc::from(right));
+            let operator = self.previous().clone();
+            let right = self.factor()?;
+            expr = Box::new(Expr::Binary(expr, operator, right));
         }
-        expr
+        Ok(expr)
     }
 
-    fn factor(&mut self) -> Expr {
-        let mut expr = self.unary();
-        while self.matches(&[Minus, Plus]) {
-            let operator = self.previous();
-            let right = self.unary();
-            expr = Expr::Binary(Rc::from(expr), operator, Rc::from(right));
+    fn factor(&mut self) -> Result<Box<Expr>, LoxResult> {
+        let mut expr = self.unary()?;
+        while self.matches(&[Slash, Star]) {
+            let operator = self.previous().clone();
+            let right = self.unary()?;
+            expr = Box::new(Expr::Binary(expr, operator, right));
         }
-        expr
+        Ok(expr)
     }
 
-    fn unary(&mut self) -> Expr {
+    fn unary(&mut self) -> Result<Box<Expr>, LoxResult> {
         if self.matches(&[Bang, Minus]) {
-            let operator = self.previous();
-            let right = self.unary();
-            return Expr::Unary(operator, Rc::from(right));
+            let operator = self.previous().clone();
+            let right = self.unary()?;
+            return Ok(Box::new(Expr::Unary(operator, right)));
         }
         self.primary()
     }
 
-    fn primary(&mut self) -> Expr{
-        if self.matches(&[False]) {return Expr::Literal(Object::False);}
-        if self.matches(&[True]) {return Expr::Literal(Object::True);}
-        if self.matches(&[Nil]) {return Expr::Literal(Object::Nil);}
-        if self.matches(&[Number,String]) {return Expr::Literal(self.previous().literal.unwrap());}
-
-        let expr = self.expression();
-        self.consume(RightParen, "Expect ')' after expression");
-        Expr::Grouping(Rc::from(expr))
-
+    fn primary(&mut self) -> Result<Box<Expr>, LoxResult>{
+        if self.matches(&[False]) {return Ok(Box::new(Expr::Literal(Object::False)));}
+        if self.matches(&[True]) {return Ok(Box::new(Expr::Literal(Object::True)));}
+        if self.matches(&[Nil]) {return Ok(Box::new(Expr::Literal(Object::Nil)));}
+        if self.matches(&[Number,String]) {
+            return Ok(
+                Box::new(
+                    Expr::Literal(
+                        self.previous().clone().literal.expect("Non previous literal")
+                    )
+                )
+            );
+        }
+        if self.matches(&[LeftParen]) {
+            let expr = self.expression()?;
+            self.consume(RightParen, "Expect ')' after expression")?;
+            return Ok(Box::new(Expr::Grouping(expr)));
+        }
+        let expected_expression = self.peek();
+        Err(LoxResult::parse_error(expected_expression.line, "Expect expression", &expected_expression.lexeme))
     }
 
-    fn consume(&self, token_type: TokenType, message: &str)  {
-        todo!()
+    fn consume(&mut self, token_type: TokenType, message: &str) -> Result<&Token, LoxResult> {
+        match self.check(token_type) {
+            true => {Ok(self.advance())}
+            false => {Err(self.error(self.peek(), message))}
+        }
+    }
+
+    fn error(&self, token: &Token, message: &str) -> LoxResult {
+        //self.hadError ?
+        LoxResult::parse_error(token.line, message, &token.lexeme)
     }
 
     fn matches(&mut self, types: &[TokenType]) -> bool{
-        for token_type in &types {
+        for &token_type in types {
             if self.check(token_type) {
                 self.advance();
                 return true;
@@ -96,7 +117,7 @@ impl Parser {
         false
     }
 
-    fn advance(&mut self) -> Token {
+    fn advance(&mut self) -> &Token {
         if !self.at_end(){
             self.current += 1;
         }
@@ -104,22 +125,35 @@ impl Parser {
     }
 
     fn peek(&self) -> &Token {
-        self.tokens[self.current]
+        &self.tokens[self.current]
     }
 
     fn check(&mut self, ttype: TokenType) -> bool {
        if !self.at_end() {
-           self.peek().ttype == ttype
+           return self.peek().ttype == ttype;
        }
        false
     }
 
     fn at_end(&self) -> bool {
-        self.peek().ttype == TokenType::Eof
+        self.peek().ttype == Eof
     }
 
-    fn previous(&self) -> Token {
-        self.tokens[self.current - 1]
+    fn previous(&self) -> &Token {
+        &self.tokens[self.current - 1]
     }
 
+    fn synchronize(&mut self) {
+        self.advance();
+
+        while !self.at_end()  {
+            if self.previous().ttype == Semicolon {
+                return;
+            }
+            if matches!(self.peek().ttype, Class | Fun | For | If | While | Print | Return) {
+                return;
+            }
+            self.advance();
+        }
+    }
 }

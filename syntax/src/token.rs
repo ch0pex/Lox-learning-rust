@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum TokenType {
     LeftParen, RightParen, LeftBrace, RightBrace,
     Comma, Dot, Minus, Plus, Semicolon, Slash, Star,
@@ -18,7 +18,7 @@ pub enum TokenType {
     Eof
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Object {
     Num(f64),
     Str(String),
@@ -38,12 +38,12 @@ impl fmt::Display for Object {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub ttype: TokenType,
     pub lexeme: String,
     pub literal: Option<Object>,
-    line: usize
+    pub line: usize
 }
 
 impl Token {
@@ -71,3 +71,4 @@ impl fmt::Display for Token {
         write!(f, "{:?} {} {}", self.ttype, self.lexeme, lit)
     }
 }
+

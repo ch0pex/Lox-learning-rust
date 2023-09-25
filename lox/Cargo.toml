@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 lox_syntax = {path = "../syntax" }
 result = {path = "../result" }
+parser = {path = "../parser"}
+ast = {path = "../ast"}
