@@ -28,10 +28,19 @@ impl LoxResult{
         err
     }
 
+    pub fn run_time_error(line: usize, message: &str) -> LoxResult {
+        let err = LoxResult::RunTimeError {
+            line,
+            message: message.to_string()
+        };
+        err.report();
+        err
+    }
+
     fn report(&self) {
         match self {
-            LoxResult::Error {line, message} => eprintln!(" Error [line {}]: {}", line, message),
-            LoxResult::RunTimeError { line, message } => eprintln!("Runtime error [line {}]: {} ", line, message),
+            LoxResult::Error {line, message} => eprintln!(" Error [line {line}]: {message}"),
+            LoxResult::RunTimeError { line, message } => eprintln!("Runtime error [line {line}]: {message} "),
             LoxResult::ParseError {line, lexeme, message} => eprintln!("Parse error [line {line}]: {message} at {lexeme}")
         }
     }

@@ -5,6 +5,7 @@ use lox_syntax::token::Token;
 use result::result::LoxResult;
 use parser::parser::Parser;
 use ast::ast_printer::AstPrinter;
+use interpreter::interpreter::Interpreter;
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -18,10 +19,16 @@ fn main() {
 }
 
 fn run_file(file_path: &str) -> io::Result<()> {
-    let buf = std::fs::read_to_string(file_path)?; 
+    let buf = std::fs::read_to_string(file_path)?;
     match run(&buf) {
         Ok(_) => std::process::exit(0),
-        Err(_) => std::process::exit(65),
+        Err(error) => {
+            match error {
+                LoxResult::Error { .. } => std::process::exit(65),
+                LoxResult::RunTimeError { .. } => std::process::exit(70),
+                LoxResult::ParseError { .. } => std::process::exit(65),
+            }
+        }
     }
 }
 
@@ -43,11 +50,11 @@ fn run_prompt() {
 
 fn run(source: &str) -> Result<(), LoxResult> {
     let mut scanner = Scanner::new(source);
-    let tokens: Vec<Token> = scanner.scan_tokens()?;
+    let tokens= scanner.scan_tokens()?;
     let mut parser = Parser::new(tokens);
-    let expression = parser.parse()?;
+    let statements  = parser.parse()?;
+    let mut interpreter = Interpreter {};
+    let _ = interpreter.interpret(&statements)?;
 
-    let mut pretty_printer = AstPrinter::new();
-    println!("{}", pretty_printer.print(expression));
     Ok(())
 }

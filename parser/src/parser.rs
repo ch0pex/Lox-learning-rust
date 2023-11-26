@@ -1,5 +1,6 @@
 use lox_syntax::token::{Object, Token, TokenType};
 use ast::expr::Expr;
+use ast::stmt::Stmt;
 use lox_syntax::token::TokenType::*;
 use result::result::LoxResult;
 
@@ -16,11 +17,61 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Box<Expr>, LoxResult>{
-        self.expression()
+    pub fn parse(&mut self) -> Result<Vec<Stmt>, LoxResult>{
+        let mut statements: Vec<Stmt> = Vec::new();
+        while !self.at_end() {
+            match self.declaration() {
+                Ok(statement )  => statements.push(statement),
+                Err(lox_result) => {
+                    self.synchronize();
+                    return Err(lox_result)
+                }
+            }
+        }
+        Ok(statements)
     }
 
-    fn expression(&mut self) -> Result<Box<Expr>, LoxResult>{
+    fn declaration(&mut self) -> Result<Stmt, LoxResult> {
+        if self.matches(&[Var]) {
+            self.var_declaration()
+        } else {
+           self.statement()
+        }
+    }
+
+    fn var_declaration(&mut self) -> Result<Stmt, LoxResult> {
+        let name = self.consume(Identifier, "Expect variable name.")?.clone();
+        let mut initializer: Option<Box<Expr>> = None;
+
+        if self.matches(&[Equals]) {
+           initializer = Some(self.expression()?);
+        }
+        self.consume(Semicolon, "Expected ';' after variable declaration.")?;
+        Ok(Stmt::Variable(name, initializer))
+
+    }
+
+    fn statement(&mut self ) -> Result<Stmt, LoxResult> {
+       if self.matches(&[Print]) {
+           self.print_statement()
+       } else {
+           self.expression_statement()
+       }
+    }
+
+    fn print_statement(&mut self) -> Result<Stmt, LoxResult> {
+        let value = self.expression()?;
+        self.consume(Semicolon, "Expect ';' after expression.")?;
+        Ok(Stmt::Print(value))
+    }
+
+    fn expression_statement(&mut self) -> Result<Stmt, LoxResult> {
+        let expr = self.expression()?;
+        self.consume(Semicolon, "Expect ';' after expression.")?;
+        Ok(Stmt::Expression(expr))
+    }
+
+    fn expression(&mut self) -> Result<Box<Expr>, LoxResult> {
         self.equality()
     }
 
@@ -85,6 +136,9 @@ impl Parser {
                     )
                 )
             );
+        }
+        if self.matches(&[Identifier]) {
+            return Ok(Box::new(Expr::Variable(self.previous().clone())));
         }
         if self.matches(&[LeftParen]) {
             let expr = self.expression()?;

@@ -5,6 +5,7 @@ members = [
     "result",
     "syntax",
     "ast",
-    "parser"
+    "parser",
+    "interpreter"
 ]
 

@@ -8,3 +8,4 @@ lox_syntax = {path = "../syntax" }
 result = {path = "../result" }
 parser = {path = "../parser"}
 ast = {path = "../ast"}
+interpreter = {path = "../interpreter"}

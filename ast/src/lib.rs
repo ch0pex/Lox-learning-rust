@@ -1,5 +1,6 @@
 pub mod expr;
 pub mod ast_printer;
+pub mod stmt;
 
 #[cfg(test)]
 mod tests{
@@ -45,6 +46,6 @@ mod tests{
             Token::new(TokenType::Star, "*".to_string(), None, 1),
             Box::new(Expr::Grouping(Box::new(Expr::Literal(Object::Num(45.67)))))
         );
-        assert_eq!("(* (- nil) (group 45.67))", printer.print(expression1) )
+        assert_eq!("(* (- nil) (group 45.67))", printer.print(Box::from(expression1)) )
     }
 }
