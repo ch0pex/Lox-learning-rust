@@ -1,30 +1,27 @@
-use lox_syntax::token::{Object, Token, TokenType};
 use ast::expr::Expr;
 use ast::stmt::Stmt;
 use lox_syntax::token::TokenType::*;
+use lox_syntax::token::{Object, Token, TokenType};
 use result::result::LoxResult;
 
 pub struct Parser {
     tokens: Vec<Token>,
-    current: usize
+    current: usize,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Parser {
-        Parser {
-            tokens,
-            current: 0
-        }
+        Parser { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Vec<Stmt>, LoxResult>{
+    pub fn parse(&mut self) -> Result<Vec<Stmt>, LoxResult> {
         let mut statements: Vec<Stmt> = Vec::new();
         while !self.at_end() {
             match self.declaration() {
-                Ok(statement )  => statements.push(statement),
+                Ok(statement) => statements.push(statement),
                 Err(lox_result) => {
                     self.synchronize();
-                    return Err(lox_result)
+                    return Err(lox_result);
                 }
             }
         }
@@ -35,7 +32,7 @@ impl Parser {
         if self.matches(&[Var]) {
             self.var_declaration()
         } else {
-           self.statement()
+            self.statement()
         }
     }
 
@@ -44,19 +41,18 @@ impl Parser {
         let mut initializer: Option<Box<Expr>> = None;
 
         if self.matches(&[Equals]) {
-           initializer = Some(self.expression()?);
+            initializer = Some(self.expression()?);
         }
         self.consume(Semicolon, "Expected ';' after variable declaration.")?;
         Ok(Stmt::Variable(name, initializer))
-
     }
 
-    fn statement(&mut self ) -> Result<Stmt, LoxResult> {
-       if self.matches(&[Print]) {
-           self.print_statement()
-       } else {
-           self.expression_statement()
-       }
+    fn statement(&mut self) -> Result<Stmt, LoxResult> {
+        if self.matches(&[Print]) {
+            self.print_statement()
+        } else {
+            self.expression_statement()
+        }
     }
 
     fn print_statement(&mut self) -> Result<Stmt, LoxResult> {
@@ -72,7 +68,26 @@ impl Parser {
     }
 
     fn expression(&mut self) -> Result<Box<Expr>, LoxResult> {
-        self.equality()
+        self.assignment()
+    }
+
+    fn assignment(&mut self) -> Result<Box<Expr>, LoxResult> {
+        let expr = self.equality()?;
+        if self.matches(&[Assign]) {
+            let equal = self.previous().clone();
+            let value = self.assignment()?;
+
+            match *expr {
+                Expr::Variable(name) => Ok(Box::new(Expr::Assign(name, value))),
+                _ => Err(LoxResult::parse_error(
+                    equal.line,
+                    "Invalid assignment target.",
+                    "=",
+                )),
+            }
+        } else {
+            Ok(expr)
+        }
     }
 
     fn equality(&mut self) -> Result<Box<Expr>, LoxResult> {
@@ -124,18 +139,23 @@ impl Parser {
         self.primary()
     }
 
-    fn primary(&mut self) -> Result<Box<Expr>, LoxResult>{
-        if self.matches(&[False]) {return Ok(Box::new(Expr::Literal(Object::False)));}
-        if self.matches(&[True]) {return Ok(Box::new(Expr::Literal(Object::True)));}
-        if self.matches(&[Nil]) {return Ok(Box::new(Expr::Literal(Object::Nil)));}
-        if self.matches(&[Number,String]) {
-            return Ok(
-                Box::new(
-                    Expr::Literal(
-                        self.previous().clone().literal.expect("Non previous literal")
-                    )
-                )
-            );
+    fn primary(&mut self) -> Result<Box<Expr>, LoxResult> {
+        if self.matches(&[False]) {
+            return Ok(Box::new(Expr::Literal(Object::False)));
+        }
+        if self.matches(&[True]) {
+            return Ok(Box::new(Expr::Literal(Object::True)));
+        }
+        if self.matches(&[Nil]) {
+            return Ok(Box::new(Expr::Literal(Object::Nil)));
+        }
+        if self.matches(&[Number, String]) {
+            return Ok(Box::new(Expr::Literal(
+                self.previous()
+                    .clone()
+                    .literal
+                    .expect("Non previous literal"),
+            )));
         }
         if self.matches(&[Identifier]) {
             return Ok(Box::new(Expr::Variable(self.previous().clone())));
@@ -146,13 +166,17 @@ impl Parser {
             return Ok(Box::new(Expr::Grouping(expr)));
         }
         let expected_expression = self.peek();
-        Err(LoxResult::parse_error(expected_expression.line, "Expect expression", &expected_expression.lexeme))
+        Err(LoxResult::parse_error(
+            expected_expression.line,
+            "Expect expression",
+            &expected_expression.lexeme,
+        ))
     }
 
     fn consume(&mut self, token_type: TokenType, message: &str) -> Result<&Token, LoxResult> {
         match self.check(token_type) {
-            true => {Ok(self.advance())}
-            false => {Err(self.error(self.peek(), message))}
+            true => Ok(self.advance()),
+            false => Err(self.error(self.peek(), message)),
         }
     }
 
@@ -161,7 +185,7 @@ impl Parser {
         LoxResult::parse_error(token.line, message, &token.lexeme)
     }
 
-    fn matches(&mut self, types: &[TokenType]) -> bool{
+    fn matches(&mut self, types: &[TokenType]) -> bool {
         for &token_type in types {
             if self.check(token_type) {
                 self.advance();
@@ -172,7 +196,7 @@ impl Parser {
     }
 
     fn advance(&mut self) -> &Token {
-        if !self.at_end(){
+        if !self.at_end() {
             self.current += 1;
         }
         self.previous()
@@ -183,10 +207,10 @@ impl Parser {
     }
 
     fn check(&mut self, ttype: TokenType) -> bool {
-       if !self.at_end() {
-           return self.peek().ttype == ttype;
-       }
-       false
+        if !self.at_end() {
+            return self.peek().ttype == ttype;
+        }
+        false
     }
 
     fn at_end(&self) -> bool {
@@ -200,14 +224,18 @@ impl Parser {
     fn synchronize(&mut self) {
         self.advance();
 
-        while !self.at_end()  {
+        while !self.at_end() {
             if self.previous().ttype == Semicolon {
                 return;
             }
-            if matches!(self.peek().ttype, Class | Fun | For | If | While | Print | Return) {
+            if matches!(
+                self.peek().ttype,
+                Class | Fun | For | If | While | Print | Return
+            ) {
                 return;
             }
             self.advance();
         }
     }
 }
+
