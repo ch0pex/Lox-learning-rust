@@ -40,7 +40,7 @@ impl Parser {
         let name = self.consume(Identifier, "Expect variable name.")?.clone();
         let mut initializer: Option<Box<Expr>> = None;
 
-        if self.matches(&[Equals]) {
+        if self.matches(&[Assign]) {
             initializer = Some(self.expression()?);
         }
         self.consume(Semicolon, "Expected ';' after variable declaration.")?;

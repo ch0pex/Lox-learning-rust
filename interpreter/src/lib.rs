@@ -1,4 +1,4 @@
-pub mod environuent;
+pub mod environment;
 pub mod interpreter;
 
 pub fn add(left: usize, right: usize) -> usize {
