@@ -1,0 +1,4 @@
+var a = 24;
+var b = 32;
+a = a * b;
+print a;

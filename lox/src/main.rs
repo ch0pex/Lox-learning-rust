@@ -1,7 +1,5 @@
-use ast::ast_printer::AstPrinter;
 use interpreter::interpreter::Interpreter;
 use lox_syntax::scanner::Scanner;
-use lox_syntax::token::Token;
 use parser::parser::Parser;
 use result::result::LoxResult;
 use std::env::args;

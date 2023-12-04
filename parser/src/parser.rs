@@ -49,10 +49,12 @@ impl Parser {
 
     fn statement(&mut self) -> Result<Stmt, LoxResult> {
         if self.matches(&[Print]) {
-            self.print_statement()
-        } else {
-            self.expression_statement()
+            return self.print_statement();
         }
+        if self.matches(&[LeftBrace]) {
+            return Ok(Stmt::Block(self.block()?));
+        }
+        self.expression_statement()
     }
 
     fn print_statement(&mut self) -> Result<Stmt, LoxResult> {
@@ -74,13 +76,12 @@ impl Parser {
     fn assignment(&mut self) -> Result<Box<Expr>, LoxResult> {
         let expr = self.equality()?;
         if self.matches(&[Assign]) {
-            let equal = self.previous().clone();
+            let equals = self.previous().clone();
             let value = self.assignment()?;
-
             match *expr {
                 Expr::Variable(name) => Ok(Box::new(Expr::Assign(name, value))),
                 _ => Err(LoxResult::parse_error(
-                    equal.line,
+                    equals.line,
                     "Invalid assignment target.",
                     "=",
                 )),
@@ -157,20 +158,27 @@ impl Parser {
                     .expect("Non previous literal"),
             )));
         }
+
         if self.matches(&[Identifier]) {
             return Ok(Box::new(Expr::Variable(self.previous().clone())));
         }
+
         if self.matches(&[LeftParen]) {
             let expr = self.expression()?;
             self.consume(RightParen, "Expect ')' after expression")?;
             return Ok(Box::new(Expr::Grouping(expr)));
         }
-        let expected_expression = self.peek();
-        Err(LoxResult::parse_error(
-            expected_expression.line,
-            "Expect expression",
-            &expected_expression.lexeme,
-        ))
+
+        Err(self.error(self.peek(), "Expect expression"))
+    }
+
+    fn block(&mut self) -> Result<Vec<Stmt>, LoxResult> {
+        let mut statements = vec![];
+        while !self.check(RightBrace) && !self.at_end() {
+            statements.push(self.declaration()?);
+        }
+        self.consume(RightBrace, "Expect '}' after block.")?;
+        Ok(statements)
     }
 
     fn consume(&mut self, token_type: TokenType, message: &str) -> Result<&Token, LoxResult> {
@@ -181,7 +189,6 @@ impl Parser {
     }
 
     fn error(&self, token: &Token, message: &str) -> LoxResult {
-        //self.hadError ?
         LoxResult::parse_error(token.line, message, &token.lexeme)
     }
 

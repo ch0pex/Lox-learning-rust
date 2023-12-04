@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-lox_syntax = {path = "../syntax" }
-result = {path = "../result" }
-parser = {path = "../parser"}
-ast = {path = "../ast"}
-interpreter = {path = "../interpreter"}
+lox_syntax = { path = "../syntax" }
+result = { path = "../result" }
+parser = { path = "../parser" }
+ast = { path = "../ast" }
+interpreter = { path = "../interpreter" }
